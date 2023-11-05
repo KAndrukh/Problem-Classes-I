@@ -2,18 +2,18 @@ import gc
 import os
 import warnings
 from os import path
+from cycler import V
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 warnings.filterwarnings('ignore')
 
 sample_size = 28
-plots_dir = os.path.join('out', 'plots', f'n{sample_size}', 'histograms')
 calculations_dir = os.path.join('out', 'calculations', f'n{sample_size}')
 
-os.makedirs(plots_dir, exist_ok=True)
 os.makedirs(calculations_dir, exist_ok=True)
 
 metrics = {
@@ -134,10 +134,19 @@ def calc_comparisons(metric_info, grs, irs):
         else:
             print(m_name, m_metr_name)
         
-
-
+        plots_dir_comp = os.path.join(plots_dir_comp, 'Corellations')
+        os.makedirs(plots_dir_comp, exist_ok=True)
         
+        df_corr = df_comp.corr('spearman')
+        fig_heatmap = sns.heatmap(df_corr, annot=True, cmap='coolwarm', fmt=".2f")
+        fig_heatmap.set_title(m_metr_name + ' To ' + m_name)
+        fig_heatmap.set_xticklabels(['gr', 'ir', m_metr_name[:3] + 'To' + m_name[:3]], rotation=0)
+        fig_heatmap.set_yticklabels(['gr', 'ir', m_metr_name[:3] + 'To' + m_name[:3]])
+        fig_heatmap.figure.savefig(path.join(plots_dir_comp, f'Correlation_{m_metr_name[:3] + 'To' + m_name[:3]}_b{BINS}_histogram_titled.svg'), dpi=300)
+
+        plt.close(fig_heatmap.figure)      
         
+        del df_corr
         del df_comp            
         del df_metric
         gc.collect()

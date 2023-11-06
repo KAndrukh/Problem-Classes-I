@@ -90,7 +90,7 @@ def plot_creation(m_name, df, grs, irs, ratios_labels, bins_n):
 
     return fig
               
-def heatmap_creation(df_comp, m_name, m_metr_name, bins_n):
+def heatmap_creation(df_comp, m_name, m_metr_name, bins_n, plots_dir_comp):
     plots_dir_comp = os.path.join(plots_dir_comp, 'Corellations')
     os.makedirs(plots_dir_comp, exist_ok=True)
     
@@ -158,7 +158,7 @@ def calc_comparisons(metric_info, grs, irs):
             plt.close(fig)
         
         #save a heatmap of correlations in the comparison dataframe
-        heatmap_creation(df_comp, m_name, m_metr_name, BINS)
+        heatmap_creation(df_comp, m_name, m_metr_name, BINS, plots_dir_comp)
         
         del df_comp            
         del df_metric

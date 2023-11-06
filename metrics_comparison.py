@@ -89,7 +89,25 @@ def plot_creation(m_name, df, grs, irs, ratios_labels, bins_n):
                 axs[f'a{i}{g}n'].set_xticks([0], [''])
 
     return fig
-                
+              
+def heatmap_creation(df_comp, m_name, m_metr_name, bins_n):
+    plots_dir_comp = os.path.join(plots_dir_comp, 'Corellations')
+    os.makedirs(plots_dir_comp, exist_ok=True)
+    
+    #calculate correlations using Spearman method
+    df_corr = df_comp.corr('spearman')
+    
+    #set titles and save the heatmap
+    fig_heatmap = sns.heatmap(df_corr, annot=True, cmap='coolwarm', fmt=".2f")
+    fig_heatmap.set_title(m_metr_name + ' To ' + m_name)
+    fig_heatmap.set_xticklabels(['gr', 'ir', m_metr_name[:3] + 'To' + m_name[:3]], rotation=0)
+    fig_heatmap.set_yticklabels(['gr', 'ir', m_metr_name[:3] + 'To' + m_name[:3]])
+    fig_heatmap.figure.savefig(path.join(plots_dir_comp, f'Correlation_{m_metr_name[:3] + 'To' + m_name[:3]}_b{bins_n}_histogram_titled.svg'), dpi=300)
+
+    plt.close(fig_heatmap.figure)      
+    
+    del df_corr
+    gc.collect()
 
 def calc_comparisons(metric_info, grs, irs):
     m_file, m_name = metric_info
@@ -100,19 +118,24 @@ def calc_comparisons(metric_info, grs, irs):
     # filter to get only results for selected ratios
     df_orig = df_orig.loc[df_orig.ir.isin(irs) & df_orig.gr.isin(grs)]
 
+    #go through each metric
     for metric in metrics.items():
         m_metr_file, m_metr_name = metric
         
+        #ignore the comparisons between the same dataset
         if m_metr_name == m_name:
             continue
         
+        #create a dataframe for the current compared metric
         with open(path.join(calculations_dir, m_metr_file), 'rb') as f_comp:
             df_metric = pd.concat([gr, ir, pd.DataFrame(np.fromfile(f_comp), columns=[m_metr_name])], axis=1)
             
         df_metric = df_metric.loc[df_metric.ir.isin(irs) & df_metric.gr.isin(grs)]
-        df_comp = pd.concat([gr, ir, pd.DataFrame(df_metric[m_metr_name] / df_orig[m_name] , columns=[m_metr_name + ' to ' + m_name])], axis=1)
         
+        #create a dataframe with comparison of outputs of two metrics
+        df_comp = pd.concat([gr, ir, pd.DataFrame(df_metric[m_metr_name] / df_orig[m_name] , columns=[m_metr_name + ' to ' + m_name])], axis=1)
         df_comp = df_comp.loc[df_comp.ir.isin(irs) & df_comp.gr.isin(grs)]
+        #filter all infinite values
         df_comp = df_comp.replace(np.inf, np.nan)
         df_comp = df_comp.replace(-np.inf, np.nan)
       
@@ -122,31 +145,21 @@ def calc_comparisons(metric_info, grs, irs):
         os.makedirs(plots_dir_comp, exist_ok=True)
         os.makedirs(calculations_dir_comp, exist_ok=True)
         
+        #save the comparison dataframe in .bin file
         with open(path.join(calculations_dir_comp, m_metr_name + ".bin"), "wb+") as f:
             df_comp.to_numpy().tofile(f)
             
         BINS = 109
         
+        #create and save a histogram for the comparison dataframe
         if not df_comp.empty:
             fig = plot_creation(df_comp.columns[2], df_comp, grs, irs, ratios_labels, BINS)
             fig.savefig(path.join(plots_dir_comp, f'{m_metr_name}_b{BINS}_histogram_titled.svg'), dpi=300)
             plt.close(fig)
-        else:
-            print(m_name, m_metr_name)
         
-        plots_dir_comp = os.path.join(plots_dir_comp, 'Corellations')
-        os.makedirs(plots_dir_comp, exist_ok=True)
+        #save a heatmap of correlations in the comparison dataframe
+        heatmap_creation(df_comp, m_name, m_metr_name, BINS)
         
-        df_corr = df_comp.corr('spearman')
-        fig_heatmap = sns.heatmap(df_corr, annot=True, cmap='coolwarm', fmt=".2f")
-        fig_heatmap.set_title(m_metr_name + ' To ' + m_name)
-        fig_heatmap.set_xticklabels(['gr', 'ir', m_metr_name[:3] + 'To' + m_name[:3]], rotation=0)
-        fig_heatmap.set_yticklabels(['gr', 'ir', m_metr_name[:3] + 'To' + m_name[:3]])
-        fig_heatmap.figure.savefig(path.join(plots_dir_comp, f'Correlation_{m_metr_name[:3] + 'To' + m_name[:3]}_b{BINS}_histogram_titled.svg'), dpi=300)
-
-        plt.close(fig_heatmap.figure)      
-        
-        del df_corr
         del df_comp            
         del df_metric
         gc.collect()

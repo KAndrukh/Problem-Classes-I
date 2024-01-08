@@ -116,7 +116,7 @@ if __name__ == '__main__':
         # k - size of set; n -  error matrix combinations
         # k should be a multiple of n, (otherwise a potentially incomplete data set is generated)
         n = 8
-        k = 28
+        k = n * 3
         print(f'Default params: ', end='')
 
     print(f'n={n}, k={k}')

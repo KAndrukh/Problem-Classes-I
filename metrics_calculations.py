@@ -14,6 +14,7 @@ import gc
 import os
 import pickle
 from os import path
+from matplotlib.pyplot import new_figure_manager
 
 import numpy as np
 import pandas as pd
@@ -35,7 +36,7 @@ data_cols = [
     'j_fn',     # majority false negative
 ]
 
-sample_size = 28
+sample_size = 24
 
 calculations_dir = path.join('out', 'calculations', f'n{sample_size}')
 os.makedirs(calculations_dir, exist_ok=True)
@@ -66,6 +67,9 @@ with open(path.join(calculations_dir, "gr.bin"), "wb+") as f:
 # Calculate imbalance ratios
 with open(path.join(calculations_dir, "ir.bin"), "wb+") as f:
     get_imbalance_ratios(df).to_numpy().tofile(f)
+    
+with open(path.join(calculations_dir, "sr.bin"), "wb+") as f:
+    get_stereotypical_ratio_geometrical(df).to_numpy().tofile(f)
 
 # calculate metrics
 with open(path.join(calculations_dir, "i_tpr.bin"), "wb+") as f:
@@ -103,7 +107,7 @@ with open(path.join(calculations_dir, "acc_equality_ratio.bin"), "wb+") as f:
 
 with open(path.join(calculations_dir, "acc_equality_diff.bin"), "wb+") as f:
     get_acc_equality_diff(df).to_numpy().tofile(f)
-    
+
 # Free the memory
 del df
 gc.collect()
@@ -113,8 +117,6 @@ gc.get_stats()
 # # Part 2: Get additional calculations
 # 
 # Calculations that are based on the previous ones. Some files from the previous part are used here, and new ones are created.
-
-# In[ ]:
 
 
 with open(path.join(calculations_dir, "i_tpr.bin"), "rb") as f:
@@ -193,3 +195,67 @@ del j_npv
 del i_npv
 gc.collect()
 
+# In[ ]:
+
+with open(path.join(calculations_dir, "ir.bin"), "rb") as f:
+    ir = pd.Series(np.fromfile(f))
+
+with open(path.join(calculations_dir, "pred_equality_ratio.bin"), "rb") as f:
+    pred_equality_ratio = pd.Series(np.fromfile(f))
+
+with open(path.join(calculations_dir, "pred_equality_diff.bin"), "rb") as f:
+    pred_equality_diff = pd.Series(np.fromfile(f))
+
+
+#Accuracy equality + Predictive equality
+with open(path.join(calculations_dir, "acc_equality_ratio.bin"), "rb") as f:
+    acc_equality_ratio = pd.Series(np.fromfile(f))
+
+with open(path.join(calculations_dir, "pred_acc_equality_ratio.bin"), "wb+") as f:
+    get_pred_acc_equality_ratio(ir, pred_equality_ratio, acc_equality_ratio).to_numpy().tofile(f)
+
+del acc_equality_ratio     
+
+with open(path.join(calculations_dir, "acc_equality_diff.bin"), "rb") as f:
+    acc_equality_diff = pd.Series(np.fromfile(f))
+
+with open(path.join(calculations_dir, "pred_acc_equality_diff.bin"), "wb+") as f:
+    get_pred_acc_equality_diff(ir, pred_equality_diff, acc_equality_diff).to_numpy().tofile(f)
+    
+del acc_equality_diff
+
+
+#Positive predictive parity + Predictive equality
+with open(path.join(calculations_dir, "pos_pred_parity_ratio.bin"), "rb") as f:
+    pos_pred_parity_ratio = pd.Series(np.fromfile(f))
+
+with open(path.join(calculations_dir, "pos_pred_equality_ratio.bin"), "wb+") as f:
+    get_pos_pred_equality_ratio(ir, pred_equality_ratio, pos_pred_parity_ratio).to_numpy().tofile(f)    
+ 
+del pos_pred_parity_ratio
+ 
+with open(path.join(calculations_dir, "pos_pred_parity_diff.bin"), "rb") as f:
+    pos_predictive_parity_diff = pd.Series(np.fromfile(f))
+
+with open(path.join(calculations_dir, "pos_pred_equality_diff.bin"), "wb+") as f:
+    get_pos_pred_equality_diff(ir, pred_equality_diff, pos_predictive_parity_diff).to_numpy().tofile(f)
+ 
+del pos_predictive_parity_diff
+
+
+#Negative predictive parity + Predictive equality
+with open(path.join(calculations_dir, "neg_pred_parity_ratio.bin"), "rb") as f:
+    neg_pred_parity = pd.Series(np.fromfile(f))    
+
+with open(path.join(calculations_dir, "neg_pred_equality_ratio.bin"), "wb+") as f:
+    get_neg_pred_equality_ratio(ir, pred_equality_ratio, neg_pred_parity).to_numpy().tofile(f)
+    
+del neg_pred_parity
+
+with open(path.join(calculations_dir, "neg_pred_parity_diff.bin"), "rb") as f:
+    neg_predictive_parity_diff = pd.Series(np.fromfile(f))
+
+with open(path.join(calculations_dir, "neg_pred_equality_diff.bin"), "wb+") as f:
+    get_neg_pred_equality_diff(ir, pred_equality_diff, neg_predictive_parity_diff).to_numpy().tofile(f)
+ 
+del neg_predictive_parity_diff

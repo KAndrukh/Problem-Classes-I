@@ -22,10 +22,18 @@ __all__ = [
     'get_pos_pred_parity_diff',
     'get_neg_pred_parity_ratio',
     'get_neg_pred_parity_diff',
+    'get_stereotypical_ratio_harmonic',
+    'get_pred_acc_equality_ratio',
+    'get_pred_acc_equality_diff',
+    'get_neg_pred_equality_ratio',
+    'get_neg_pred_equality_diff',
+    'get_pos_pred_equality_ratio',
+    'get_pos_pred_equality_diff',
+    'get_stereotypical_ratio_geometrical'
 ]
 
+import numpy as np
 import pandas as pd
-
 
 # Group Ratio
 def get_group_ratios(df: pd.DataFrame):
@@ -35,15 +43,27 @@ def get_group_ratios(df: pd.DataFrame):
 
 # Imbalance Ratio
 def get_imbalance_ratios(df: pd.DataFrame):
-    return (df.i_tp + df.i_fn + df.j_tp + df.j_fn) / (
+    df['ir'] = (df.i_tp + df.i_fn + df.j_tp + df.j_fn) / (
                 df.i_tp + df.i_fp + df.i_tn + df.i_fn + df.j_tp + df.j_fp + df.j_tn + df.j_fn)
-
+    
+    return df.ir
 
 # Stereotypical bias
 def get_stereotypical_bias(df: pd.DataFrame):
     return (df.i_tp + df.i_fp + df.i_tn + df.i_fn) / (df.j_tp + df.j_fp + df.j_tn + df.j_fn) - \
         (df.j_tp + df.j_fp + df.j_tn + df.j_fn) / (df.i_tp + df.i_fp + df.i_tn + df.i_fn)
 
+def get_stereotypical_ratio_geometrical(df: pd.DataFrame):
+    # Stereotype Ratio Positive
+    srp = (df.j_tp + df.j_fn) / (df.j_tp + df.j_fn + df.i_tp + df.i_fn)
+    # Stereotype Ratio Negative
+    srn = (df.j_tn + df.j_fp) / (df.j_tn + df.j_fp + df.i_tn + df.i_fp)
+    
+    sr = np.sqrt(srp * srn)
+    
+    
+
+    return sr
 
 # True Positive Rate
 def getTPR_i(df: pd.DataFrame):
@@ -146,3 +166,30 @@ def get_neg_pred_parity_ratio(j_npv, i_npv):
 # Negative Predictive Parity Difference
 def get_neg_pred_parity_diff(j_npv, i_npv):
     return j_npv - i_npv
+
+# Stereotype Ratio
+def get_stereotypical_ratio_harmonic(df: pd.DataFrame):
+    # Stereotype Ratio Positive
+    srp = (df.j_tp + df.j_fn) / (df.j_tp + df.j_fn + df.i_tp + df.i_fn)
+    # Stereotype Ratio Negative
+    srn = (df.j_tn + df.j_fp) / (df.j_tn + df.j_fp + df.i_tn + df.i_fp)
+    
+    return (2 * srp * srn) / (srp + srn)
+
+def get_pred_acc_equality_ratio(ir, pred_equality, acc_equality):    
+    return (1 - ir) * pred_equality + ir * acc_equality
+
+def get_pred_acc_equality_diff(ir, pred_equality, acc_equality):    
+    return (1 - ir) * pred_equality + ir * acc_equality
+
+def get_neg_pred_equality_ratio(ir, pred_equality, neg_pred_parity):
+    return (1 - ir) * neg_pred_parity + ir * pred_equality
+
+def get_neg_pred_equality_diff(ir, pred_equality, neg_pred_parity):
+    return (1 - ir) * neg_pred_parity + ir * pred_equality
+
+def get_pos_pred_equality_ratio(ir, pred_equality, pos_pred_parity):    
+    return (1 - ir) * pos_pred_parity + ir * pred_equality
+
+def get_pos_pred_equality_diff(ir, pred_equality, pos_pred_parity):    
+    return (1 - ir) * pos_pred_parity + ir * pred_equality

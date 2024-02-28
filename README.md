@@ -1,1 +1,1 @@
-You can read the paper clicking on [this](https://github.com/KAndrukh/Problem-Classes-I/Stereotypical_Bias.pdf)
+You can read the paper clicking on [this]([https://github.com/KAndrukh/Problem-Classes-I/Stereotypical_Bias.pdf](https://github.com/KAndrukh/Problem-Classes-I/blob/main/Stereotypical_Bias.pdf)https://github.com/KAndrukh/Problem-Classes-I/blob/main/Stereotypical_Bias.pdf)
